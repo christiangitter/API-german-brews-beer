@@ -1,0 +1,18 @@
+{
+  "name": "ger-brewery",
+  "version": "1.0.0",
+  "description": "API for all the german beer lovers",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Christian Gitter",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.23.0",
+    "cheerio": "^1.0.0-rc.10",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.14",
+    "utf8": "^3.0.0"
+  }
+}
