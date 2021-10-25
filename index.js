@@ -2,17 +2,17 @@
 //PACKAGES: "axios": "^0.23.0", // "cheerio": "^1.0.0-rc.10", //  "express": "^4.17.1", // "nodemon": "^2.0.14", // "utf8": "^3.0.0"
 //START SCRIPT:  "start": "nodemon index.js" -> package.json
 //COMMAND: npm start index.js
- 
+
 //Der Port auf dem der Server läuft
 const PORT = 8800;
- 
+
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const utf8 = require("utf8");
- 
+
 const app = express();
- 
+
 const sites = [
   {
     name: "Hessen",
@@ -100,11 +100,11 @@ const sites = [
     base: "https://www.biermap24.de",
   },
 ];
- 
- 
+
+
 //alle Artikel werden in das Array artikel geladen
 const brauereien = [];
- 
+
 sites.forEach((site) => {
   axios.get(site.address).then((response) => {
     const html = response.data;
@@ -156,12 +156,12 @@ sites.forEach((site) => {
     });
   });
 });
- 
+
 //wenn hinter dem Port /news geschrieben wird, wird das Artikel-Array als JSON ausgegeben
 app.get("/brews", function (req, res) {
   res.json(brauereien);
 });
- 
+
 //Brauereien nach Bundesland
 app.get("/brews/:bundesland", function (req, res) {
   const brewIDraw = req.params.bundesland;
@@ -174,13 +174,20 @@ app.get("/brews/:bundesland", function (req, res) {
     const html = response.data;
     const $ = cheerio.load(html);
     const localbrews = [];
-    $(".listing-block-holder tbody tr td a", html).each(function () {
-      const title = $(this).attr("title");
-      const url = $(this).attr("href");
+    $(".listing-block-holder tbody tr", html).each(function () {
+      const title = $(this).find('td a').attr("title");
+      const ortRaw = $(this).toString()
+      const ortwithoutTr = ortRaw.replace(/tr/g, '-');
+      const ortwithoutTd = ortwithoutTr.replace(/td/g, '-');
+      const ortwithoutSlashes = ortwithoutTd.replace(/\\|\//g,'')
+      const ortwithoutBrakets = ortwithoutSlashes.split("<->")
+      const ort = ortwithoutBrakets[5]
+     //const url = $(this).attr("href");
       if (title !== `Brauerein in ${brewID}`) {
         localbrews.push({
           title,
-          url: bsUrl + url,
+          ort,
+          //url: bsUrl + url,
         });
       }
     });
@@ -195,17 +202,36 @@ app.get("/beers", function (req, res) {
     const html = response.data;
     const $ = cheerio.load(html);
     const germanbeers = [];
-    $(".listing-block-holder li span a", html).each(function () {
-      const bier = $(this).attr("title")
-      const beerUrl = $(this).attr("href")
-        germanbeers.push({
-          bier,
-          url: baseUrl + beerUrl
-        });
+    $(".listing-block-holder li", html).each(function () {
+      const bier = $(this).find('span a').attr('title')
+      const ortRaw = $(this).find('div span').toString()
+      ortwithoutSpans = ortRaw.replace(/span/g, '-');
+      //remove all Slahes
+      ortwithoutSlashes = ortwithoutSpans.replace(/\\|\//g, '')
+      ortwithoutBrakets = ortwithoutSlashes.split("<->")
+      substr = 'badge-pill'
+      if (ortwithoutBrakets[3].includes(substr)) {
+        herkunft = ortwithoutBrakets[5]
+        bewertungRaw = ortwithoutBrakets[7]
+      }
+      else {
+        herkunft = ortwithoutBrakets[3]
+        bewertungRaw = ortwithoutBrakets[5]
+      }
+      bewertungMain = bewertungRaw.split(' ')
+      bewertung = bewertungMain[0]
+      votes = bewertungMain[2]
+
+      germanbeers.push({
+        bier,
+        herkunft,
+        bewertung,
+        votes,
+      });
     });
     res.json(germanbeers);
   });
 });
- 
+
 //hier wird der Port der App zugewiesen
 app.listen(PORT, () => console.log(`Server läuft auf PORT ${PORT}`));
