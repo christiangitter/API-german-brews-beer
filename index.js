@@ -3,7 +3,7 @@
 //START SCRIPT:  "start": "nodemon index.js" -> package.json
 //COMMAND: npm start index.js
 //Der Port auf dem der Server läuft
-const PORT = 8800;
+const PORT = process.env.PORT || 8000
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
