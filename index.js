@@ -162,6 +162,9 @@ sites.forEach((site) => {
     });
   });
 });
+app.get("/", function (req, res) {
+  res.json('Welcome to my Beer-API. Use Endpoints to get some Data.');
+});
 //wenn hinter dem Port /news geschrieben wird, wird das Artikel-Array als JSON ausgegeben
 app.get("/brews", function (req, res) {
   res.json(brauereien);
