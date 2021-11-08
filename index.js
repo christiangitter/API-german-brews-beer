@@ -237,5 +237,53 @@ app.get("/beers", function (req, res) {
     res.json(germanbeers);
   });
 });
+app.get("/topbeers", function (req, res) {
+  const url = "https://www.biermap24.de/bierliste.php";
+  const baseUrl = "https://www.biermap24.de/";
+  axios.get(url).then((response) => {
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const germanbeers = [];
+    const topbeers = [];
+    var sorttoparray = [];
+    $(".listing-block-holder li", html).each(function () {
+      const bier = $(this).find("span a").attr("title");
+      const ortRaw = $(this).find("div span").toString();
+      ortwithoutSpans = ortRaw.replace(/span/g, "-");
+      //remove all Slahes
+      ortwithoutSlashes = ortwithoutSpans.replace(/\\|\//g, "");
+      ortwithoutBrakets = ortwithoutSlashes.split("<->");
+      substr = "badge-pill";
+      if (ortwithoutBrakets[3].includes(substr)) {
+        herkunft = ortwithoutBrakets[5];
+        bewertungRaw = ortwithoutBrakets[7];
+      } else {
+        herkunft = ortwithoutBrakets[3];
+        bewertungRaw = ortwithoutBrakets[5];
+      }
+      bewertungMain = bewertungRaw.split(" ");
+      bewertung = bewertungMain[0];
+      bewertungIntraw = bewertung.substring(0, bewertung.length - 1);
+      bewertungInt = parseInt(bewertungIntraw);
+      votesRaw = bewertungMain[2];
+      votes = parseInt(votesRaw)
+      
+      germanbeers.push({
+        bier,
+        herkunft,
+        bewertungInt,
+        votes,
+      });
+      function compareNumbers(a, b) {
+        return a.bewertungInt - b.bewertungInt;
+      }
+      sorttoparrayRaw =germanbeers.sort(compareNumbers);
+      sorttoparray = sorttoparrayRaw.reverse();
+      filteredArray = sorttoparray.filter(item => item.votes > 30);
+    });
+    
+    res.json(filteredArray);
+  });
+});
 //hier wird der Port der App zugewiesen
 app.listen(PORT, () => console.log(`Server läuft auf PORT ${PORT}`));
